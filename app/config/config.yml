@@ -26,7 +26,8 @@ framework:
     trusted_proxies: ~
     session:
         # http://symfony.com/doc/current/reference/configuration/framework.html#handler-id
-        handler_id:  session.handler.native_file
+        #handler_id:  session.handler.native_file
+        handler_id:  snc_redis.session.handler
         save_path:   "%kernel.root_dir%/../var/sessions/%kernel.environment%"
     fragments:       ~
     http_method_override: true
@@ -74,4 +75,34 @@ snc_redis:
             type: predis
             alias: default
             dsn: redis://localhost
-
+            logging: %kernel.debug%
+        cache:
+            type: predis
+            alias: cache
+            dsn: redis://localhost
+            logging: true
+    session:
+        client: default
+        prefix: redses
+    doctrine:
+        metadata_cache:
+            client: cache
+            entity_manager: default
+            document_manager: default
+        result_cache:
+            client: cache
+            entity_manager: [default, read]
+            document_manager: [default, slave1, slave2]
+            namespace: "dcrc:"
+        query_cache:
+            client: cache
+            entity_manager: default
+        second_level_cache:
+            client: cache
+            entity_manager: default
+    #monolog:
+    #    client: cache
+    #    key: monolog
+    swiftmailer:
+        client: default
+        key: swiftmailer

@@ -60,6 +60,13 @@ doctrine:
         naming_strategy: doctrine.orm.naming_strategy.underscore
         auto_mapping: true
 
+monolog:
+    handlers:
+        main:
+            type: service
+            id: snc_redis.monolog.handler
+            level: debug
+
 # Swiftmailer Configuration
 swiftmailer:
     transport: "%mailer_transport%"
@@ -74,35 +81,45 @@ snc_redis:
         default:
             type: predis
             alias: default
-            dsn: redis://localhost
+            dsn: redis://localhost:6660
             logging: %kernel.debug%
         cache:
             type: predis
             alias: cache
-            dsn: redis://localhost
+            dsn:
+                - redis://localhost:6660?alias=master
+                - redis://localhost:6661
+                - redis://localhost:6662
+            options:
+                replication: true           # this have to be set to true (so why this option exists?)
             logging: true
+        monolog:
+            type: predis
+            alias: monolog
+            dsn: redis://localhost:6660
+            logging: false
+            options:
+                connection_persistent: true
     session:
         client: default
         prefix: redses
     doctrine:
         metadata_cache:
             client: cache
-            entity_manager: default
-            document_manager: default
+            entity_manager: default          # the name of your entity_manager connection
+            document_manager: default        # the name of your document_manager connection
         result_cache:
             client: cache
-            entity_manager: [default, read]
-            document_manager: [default, slave1, slave2]
-            namespace: "dcrc:"
+            entity_manager: default          # you may specify multiple entity_managers
         query_cache:
             client: cache
             entity_manager: default
         second_level_cache:
             client: cache
             entity_manager: default
-    #monolog:
-    #    client: cache
-    #    key: monolog
+    monolog:
+        client: monolog
+        key: monolog
     swiftmailer:
         client: default
         key: swiftmailer
